@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 main_df = pd.DataFrame()
+data_frame_inventory = {}
 
 def clean_list(input):
     dirty_input=input.split(",")
@@ -43,6 +44,9 @@ def load_data(*args):
         main_df = pd.read_csv(data_file)
 
 
+def save_dataframe(new_df,df_name):
+    data_frame_inventory[df_name] = new_df
+
 def preview_data(df):
     def_records = 20
     def_records = int(input(f"Number of records to preview [{def_records}]: ") or def_records) 
@@ -75,7 +79,16 @@ def aggregate_data(df):
     agg_functions = clean_list(agg_functions)
     agg_dict = clean_dict(agg_fields,agg_functions)
     try:
-        print(df.groupby(pivot_fields).agg(agg_dict))
+        agg_df = df.groupby(pivot_fields).agg(agg_dict).reset_index()
+        df_name_for_inv = f"{pivot_fields}-{agg_fields}-{agg_functions}"
+        df_name_for_inv = df_name_for_inv.replace('[','')
+        df_name_for_inv = df_name_for_inv.replace(']','')
+        df_name_for_inv = df_name_for_inv.replace(',','_')
+        df_name_for_inv = df_name_for_inv.replace('\'','')
+        df_name_for_inv = df_name_for_inv.replace(' ','')
+        print(f"Dataframe saved as {df_name_for_inv}")
+        save_dataframe(agg_df, f"{df_name_for_inv}")
+
     except KeyError as e:
         print(f"Invalid Column: {e}, Try Again.")
         aggregate_data(df)
@@ -93,6 +106,30 @@ def query_data(df):
             print(f"Error {e}, Try Again.")
             query_data(df)
 
+def list_dataframe():
+    counter = 0
+    df_keys = {}
+    for key in data_frame_inventory.keys():
+        df_keys[counter] = key
+        counter += 1
+    
+    for key,value in df_keys.items():
+        print(f"Dataframe {key}: {value}")
+
+    user_input = int(input("Select Dataframe number to Load: "))
+    print(df_keys)
+    name = df_keys.get(user_input, 'Key not found')
+    load_dataframe_from_inventory(name)
+    
+
+
+
+
+def load_dataframe_from_inventory(key):
+    global main_df
+    main_df = data_frame_inventory[key]
+    return main_df
+
 def main():
     max_rows = 100
     max_cols = 30
@@ -105,10 +142,12 @@ def main():
         print("3. Select Fields (fields)")
         print("4. Aggregate by Fields (stats)")
         print("5. Filter (where)")
+        print("----------------------------------")
+        print("i. Dataframe Inventory")
         print("q. Exit")
         print("s. Settings")
 
-        choice = input("Enter your choice (1-5): ")
+        choice = input("Enter your choice: ")
 
         if choice == '1':
             load_data()
@@ -120,16 +159,38 @@ def main():
             aggregate_data(main_df)
         elif choice == '5':
             query_data(main_df)
+        elif choice == 'i':
+            list_dataframe()
         elif choice == 'q':
             print("Exiting the program. Goodbye!")
             break
         elif choice == 's':
-            max_rows = int(input(f"Enter max number of rows [{max_rows}]: ") or max_rows)
-            max_cols = int(input(f"Enter max number of columns [{max_cols}]: ") or max_cols)
-            max_disp_width = int(input(f"Enter display width size [{max_disp_width}]: ") or max_disp_width)
-            pd.set_option('display.max_rows', max_rows)
-            pd.set_option('display.max_columns', max_cols)
-            pd.set_option('display.width',max_disp_width)
+            max_rows = input(f"Enter max number of rows [{max_rows}]: ") or max_rows
+            max_cols = input(f"Enter max number of columns [{max_cols}]: ") or max_cols
+            max_disp_width = input(f"Enter display width size [{max_disp_width}]: ") or max_disp_width
+            try:
+                if isinstance(max_rows, int):
+                    print(max_rows, type(max_rows))
+                    pd.set_option('display.max_rows', int(max_rows))
+                else:
+                    pd.set_option('display.max_rows', None)
+
+                if isinstance(max_cols, int):
+                    pd.set_option('display.max_columns', max_cols)
+                else:
+                    pd.set_option('display.max_columns', None)
+
+                if isinstance(max_disp_width, int):
+                    pd.set_option('display.width',max_disp_width)
+                else:
+                    pd.set_option('display.width', None)
+
+            except ValueError as e:
+                pd.set_option('display.max_rows', int(max_rows))
+                pd.set_option('display.max_columns', int(max_cols))
+                pd.set_option('display.width',int(max_disp_width))
+                
+
             
         else:
             print("Invalid choice. Please enter a number between 1 and 5, q, or s.")
