@@ -1,5 +1,5 @@
 # Pandas For Splunkers
-Menu drive utility to quickly parse through data by using pandas functionality and aligning it with equivalent Splunk commands.
+Menu driven utility to quickly parse through data by using pandas functionality and aligning it with equivalent Splunk commands.
 
 ## Usage
 `pandas_for_splunkers.py file.csv`
