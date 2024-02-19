@@ -134,6 +134,7 @@ def main():
     max_rows = 100
     max_cols = 30
     max_disp_width = 500
+    max_col_width = 50
     
     while True:
         print("\nMenu:")
@@ -168,6 +169,7 @@ def main():
             max_rows = input(f"Enter max number of rows [{max_rows}]: ") or max_rows
             max_cols = input(f"Enter max number of columns [{max_cols}]: ") or max_cols
             max_disp_width = input(f"Enter display width size [{max_disp_width}]: ") or max_disp_width
+            max_col_width = input(f"Enter display width size [{max_col_width}]: ") or max_col_width
             try:
                 if isinstance(max_rows, int):
                     print(max_rows, type(max_rows))
@@ -184,11 +186,17 @@ def main():
                     pd.set_option('display.width',max_disp_width)
                 else:
                     pd.set_option('display.width', None)
+                
+                if isinstance(max_col_width, int):
+                    pd.set_option('display.max_colwidth',max_col_width)
+                else:
+                    pd.set_option('display.max_colwidth', None)
 
             except ValueError as e:
                 pd.set_option('display.max_rows', int(max_rows))
                 pd.set_option('display.max_columns', int(max_cols))
                 pd.set_option('display.width',int(max_disp_width))
+                pd.set_option('display.max_colwidth',int(max_col_width))
                 
 
             
